@@ -21,123 +21,6 @@ function scrollToUrlAnchorHeading() {
   }
 }
 
-function insertCss(cssCode) {
-  const newNode = document.createElement('style');
-  newNode.innerHTML = cssCode;
-  document.getElementsByTagName('head')[0].appendChild(newNode);
-}
-
-function detectAndApplyFixedHeaderStyles() {
-  jQuery(':header').each((index, heading) => {
-    if (heading.id) {
-      jQuery(heading).removeAttr('id'); // to avoid duplicated id problem
-    }
-  });
-
-  const headerSelector = jQuery('header[fixed]');
-  const isFixed = headerSelector.length !== 0;
-  if (!isFixed) {
-    return;
-  }
-
-  const headerHeight = headerSelector.height();
-  const bufferHeight = 1;
-  insertCss(
-    `span.anchor {
-    position: relative;
-    top: calc(-${headerHeight}px - ${bufferHeight}rem)
-    }`,
-  );
-  insertCss(`.nav-menu-open { max-height: calc(100% - ${headerHeight}px); }`);
-
-  const adjustHeaderClasses = () => {
-    const newHeaderHeight = headerSelector.height();
-    const sheets = document.styleSheets;
-    for (let i = 0; i < sheets.length; i += 1) {
-      try {
-        const rules = sheets[i].cssRules;
-        // eslint-disable-next-line lodash/prefer-get
-        if (rules && rules[0] && rules[0].selectorText) {
-          switch (rules[0].selectorText) {
-          case 'span.anchor':
-            rules[0].style.top = `calc(-${newHeaderHeight}px - ${bufferHeight}rem)`;
-            break;
-          case '.nav-menu-open':
-            rules[0].style.maxHeight = `calc(100% - ${newHeaderHeight}px + 50px)`;
-            break;
-          default:
-            break;
-          }
-        }
-      } catch (e) {
-        // cssRules is not accessible for this stylesheet due to CORS, continue to the next stylesheet
-      }
-    }
-  };
-
-  const toggleHeaderOverflow = () => {
-    const headerMaxHeight = headerSelector.css('max-height');
-    // reset overflow when header shows again to allow content
-    // in the header such as search dropdown etc. to overflow
-    if (headerMaxHeight === '100%') {
-      headerSelector.css('overflow', '');
-      adjustHeaderClasses();
-    }
-  };
-
-  let lastOffset = 0;
-  let lastHash = window.location.hash;
-  const toggleHeaderOnScroll = () => {
-    // prevent toggling of header on desktop site
-    if (window.innerWidth > 767) { return; }
-
-    if (lastHash !== window.location.hash) {
-      lastHash = window.location.hash;
-      headerSelector.removeClass('hide-header');
-      return;
-    }
-    lastHash = window.location.hash;
-
-    const currentOffset = window.pageYOffset;
-    const isEndOfPage = (window.innerHeight + currentOffset) >= document.body.offsetHeight;
-    // to prevent page from auto scrolling when header is toggled at the end of page
-    if (isEndOfPage) { return; }
-
-    if (currentOffset > lastOffset) {
-      const headerEnd = headerSelector.height() + headerSelector[0].getBoundingClientRect().top;
-      const isBeforeHeader = currentOffset < headerEnd;
-      if (isBeforeHeader) {
-        return;
-      }
-
-      headerSelector.addClass('hide-header');
-    } else {
-      headerSelector.removeClass('hide-header');
-    }
-    lastOffset = currentOffset;
-  };
-
-  const resizeObserver = new ResizeObserver(() => {
-    const headerMaxHeight = headerSelector.css('max-height');
-    // hide header overflow when user scrolls to support transition effect
-    if (headerMaxHeight !== '100%') {
-      headerSelector.css('overflow', 'hidden');
-      return;
-    }
-    adjustHeaderClasses();
-  });
-  resizeObserver.observe(headerSelector[0]);
-  headerSelector[0].addEventListener('transitionend', toggleHeaderOverflow);
-
-  let scrollTimeout;
-  window.addEventListener('scroll', () => {
-    if (scrollTimeout) {
-      clearTimeout(scrollTimeout);
-    }
-    scrollTimeout = setTimeout(toggleHeaderOnScroll, 20);
-  });
-}
-
 function updateSearchData(vm) {
   jQuery.getJSON(`${baseUrl}/siteData.json`)
     .then((siteData) => {
@@ -161,7 +44,6 @@ function restoreStyleTags() {
 function executeAfterMountedRoutines() {
   restoreStyleTags();
   scrollToUrlAnchorHeading();
-  detectAndApplyFixedHeaderStyles();
 }
 
 window.handleSiteNavClick = function (elem, useAnchor = true) {
