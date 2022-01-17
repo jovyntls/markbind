@@ -42,7 +42,6 @@ function detectAndApplyFixedHeaderStyles() {
 
   const headerHeight = headerSelector.height();
   const bufferHeight = 1;
-  insertCss(`.fixed-header-padding { padding-top: ${headerHeight}px !important }`);
   insertCss(
     `span.anchor {
     position: relative;
@@ -60,10 +59,6 @@ function detectAndApplyFixedHeaderStyles() {
         // eslint-disable-next-line lodash/prefer-get
         if (rules && rules[0] && rules[0].selectorText) {
           switch (rules[0].selectorText) {
-          case '.fixed-header-padding':
-            sheets[i].deleteRule(0);
-            sheets[i].insertRule(`.fixed-header-padding { padding-top: ${newHeaderHeight}px !important }`);
-            break;
           case 'span.anchor':
             rules[0].style.top = `calc(-${newHeaderHeight}px - ${bufferHeight}rem)`;
             break;
