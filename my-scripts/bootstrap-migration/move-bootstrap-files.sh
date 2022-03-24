@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # RUN THIS FROM THE ROOT REPO
+# for better version see mass-copy-files.sh
 
 while read p; do
   cp ~/Downloads/bootstrap-5.1.3-dist/js/bootstrap.min.js "$p"
